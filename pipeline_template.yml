@@ -1,0 +1,6 @@
+prefix: ecv
+skip:
+- github
+- ci
+- github_badges
+- nf_core_configs
