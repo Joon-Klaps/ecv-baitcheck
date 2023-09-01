@@ -1,4 +1,4 @@
 sample,lineage,fasta
-ref1,1,https://raw.githubusercontent.com/nextstrain/nextclade_data/release/data/datasets/sars-cov-2/references/MN908947/versions/2021-06-25T00%3A00%3A00Z/files/sequences.fasta
+ref1,1,https://raw.githubusercontent.com/nextstrain/nextclade_data/master/data/nextstrain/sc2/reference.fasta
 ref2,2,https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.fasta
 ref3,1,https://raw.githubusercontent.com/nextstrain/nextclade_data/master/data/nextstrain/sars-cov-2-21L/BA.2/reference.fasta
