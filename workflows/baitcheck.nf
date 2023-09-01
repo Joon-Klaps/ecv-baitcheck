@@ -37,12 +37,14 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { FASTQ_ALIGN_BOWTIE2 } from '../subworkflows/nf-core/fastq_align_bowtie2/main'
+include { FASTQ_ALIGN_BWAMEM2 } from '../subworkflows/local/fastq_align_bwamem2'
 
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { BOWTIE2_BUILD               } from '../modules/nf-core/bowtie2/build/main'
+include { BWAMEM2_INDEX               } from '../modules/nf-core/bwamem2/index/main'
+include { PLOTBEDCOVERAGE             } from '../modules/local/plotbedcoverage'
+include { SAMTOOLS_DEPTH              } from '../modules/nf-core/samtools/depth/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
@@ -64,24 +66,42 @@ workflow BAITCHECK {
     ch_samplesheet = Channel.fromSamplesheet('input') // channel [ val(meta), path(reference)]
 
     //Building the references
-    ch_index = BOWTIE2_BUILD(ch_samplesheet).index
+    ch_index = BWAMEM2_INDEX(ch_samplesheet).index
 
     // some swapping of annotation data
-    ch_ref_baits = ch_index.combine(baits)
+    ch_index_baits = ch_index.combine(baits).join(ch_samplesheet,by:[0])
 
-    ch_baits = ch_ref_baits.map{meta, ref, baits -> [meta,baits]}
-    ch_ref   = ch_ref_baits.map{meta, ref, baits -> [meta,ref]  }
-
-    ch_baits.view()
-    ch_ref.view()
+    ch_baits = ch_index_baits.map{ meta, index, baits, fasta -> [ meta, baits ] }
+    ch_index = ch_index_baits.map{ meta, index, baits, fasta -> [ meta, index ] }
+    ch_ref   = ch_index_baits.map{ meta, index, baits, fasta -> [ meta, fasta ] }
 
     // Aligning the reads
-    //FASTQ_ALIGN_BOWTIE2(ch_baits, ch_ref)
+    FASTQ_ALIGN_BWAMEM2 ( 
+        ch_baits, 
+        ch_index, 
+        false, 
+        ch_ref
+    )
+    ch_versions      = ch_versions.mix(FASTQ_ALIGN_BWAMEM2.out.versions)
+    ch_multiqc_files = ch_multiqc_files.mix( FASTQ_ALIGN_BWAMEM2.out.stats.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix( FASTQ_ALIGN_BWAMEM2.out.flagstat.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix( FASTQ_ALIGN_BWAMEM2.out.idxstats.collect{it[1]}.ifEmpty([]))
+    
+    SAMTOOLS_DEPTH ( 
+        FASTQ_ALIGN_BWAMEM2.out.bam,
+        [[:],[]]
+    )
+    ch_versions      = ch_versions.mix(SAMTOOLS_DEPTH.out.versions)
 
+    PLOTBEDCOVERAGE ( 
+        SAMTOOLS_DEPTH.out.tsv 
+    )
+    ch_versions     = ch_versions.mix(PLOTBEDCOVERAGE.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
+
 
     //
     // MODULE: MultiQC
