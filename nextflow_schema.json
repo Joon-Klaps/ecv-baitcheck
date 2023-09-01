@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/ecv/baitcheck/master/nextflow_schema.json",
     "title": "ecv/baitcheck pipeline parameters",
-    "description": "A nextflow pipeline that does an in silico simulation of the baits binding to reference genomes",
+    "description": "A nextflow pipeline to run an in silico simulation of baits mapping to references",
     "type": "object",
     "definitions": {
         "input_output_options": {
