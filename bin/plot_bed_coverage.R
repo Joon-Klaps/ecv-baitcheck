@@ -26,7 +26,7 @@ r.version <- strsplit(version[['version.string']], ' ')[[1]][3]
 tidyverse.version <- as.character(packageVersion('tidyverse'))
 
 sink("versions.yml")
-cat('"${task.process}":',"\n")
+cat('PLOTBEDCOVERAGE:',"\n")
 cat(paste('    r-base:',r.version),"\n")
 cat(paste('    tidyverse:', tidyverse.version ),"\n")
 sink()
