@@ -10,27 +10,27 @@
             "sample": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces"
+                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "meta": ["sample"],
+                "unique": true
             },
-            "fastq_1": {
+            "single_end": {
+                "type": "boolean",
+                "default": true,
+                "meta": ["single_end"]
+            },
+            "lineage": {
                 "type": "string",
-                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "pattern": "^\\S+$",
+                "errorMessage": "Lineage must be provided and cannot contain spaces",
+                "meta": ["lineage"]
             },
-            "fastq_2": {
-                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'",
-                "anyOf": [
-                    {
-                        "type": "string",
-                        "pattern": "^\\S+\\.f(ast)?q\\.gz$"
-                    },
-                    {
-                        "type": "string",
-                        "maxLength": 0
-                    }
-                ]
+            "fasta": {
+                "errorMessage": "Fasta file must be provided and must end with .fasta or .fa",
+                "pattern": "^\\S+\\.f(ast)?a(\\.gz)?$",
+                "format": "file-path"
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["sample", "lineage", "fasta"]
     }
 }
