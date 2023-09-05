@@ -12,7 +12,6 @@ process PLOTSAMTOOLSSTATS {
 
     output:
     tuple val(meta), path("*.pdf"), emit: pdf
-    tuple val(meta), path("*.tsv"), emit: tsv
     path "versions.yml"           , emit: versions
 
     when:
@@ -21,11 +20,9 @@ process PLOTSAMTOOLSSTATS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-   
+
     """
-    cat $stats | grep ^SN | cut -f 2- | sed "s/\$/\t!{meta.lineage}\t!{meta.id}/" > ${prefix}.txt
-    
-    plot_sam_stats.R ${prefix}.txt ${prefix}
+    plot_sam_stats.R ${stats} ${prefix}
     """
 
     stub:

@@ -10,7 +10,8 @@
    4. [`Idxstats`](http://www.htslib.org/doc/samtools-idxstats.html)
    5. [`Depth`](http://www.htslib.org/doc/samtools-depth.html)
 3. Plot bait depth-coverage to reference ([`R`](https://www.r-project.org/))
-4. Create summary report ([`MultiQC`](https://multiqc.info/))
+4. Plot bait stats colored by lineage ([`R`](https://www.r-project.org/))
+5. Create summary report ([`MultiQC`](https://multiqc.info/))
 
 ## Usage
 
