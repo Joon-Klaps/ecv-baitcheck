@@ -43,10 +43,13 @@ include { FASTQ_ALIGN_BWAMEM2 } from '../subworkflows/local/fastq_align_bwamem2'
 // MODULE: Installed directly from nf-core/modules
 //
 include { BWAMEM2_INDEX               } from '../modules/nf-core/bwamem2/index/main'
-include { PLOTBEDCOVERAGE             } from '../modules/local/plotbedcoverage'
 include { SAMTOOLS_DEPTH              } from '../modules/nf-core/samtools/depth/main'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { PLOTBEDCOVERAGE             } from '../modules/local/plotbedcoverage'
+include { SAMTOOLSSTATSEXTRACT        } from '../modules/local/samtoolsstatsextract'
+include { CAT_CAT                     } from '../modules/nf-core/cat/cat/main'
+include { PLOTSAMTOOLSSTATS           } from '../modules/local/plotsamtoolsstats'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,27 +79,47 @@ workflow BAITCHECK {
     ch_ref   = ch_index_baits.map{ meta, index, baits, fasta -> [ meta, fasta ] }
 
     // Aligning the reads
-    FASTQ_ALIGN_BWAMEM2 ( 
-        ch_baits, 
-        ch_index, 
-        false, 
+    FASTQ_ALIGN_BWAMEM2 (
+        ch_baits,
+        ch_index,
+        false,
         ch_ref
     )
     ch_versions      = ch_versions.mix(FASTQ_ALIGN_BWAMEM2.out.versions)
     ch_multiqc_files = ch_multiqc_files.mix( FASTQ_ALIGN_BWAMEM2.out.stats.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix( FASTQ_ALIGN_BWAMEM2.out.flagstat.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix( FASTQ_ALIGN_BWAMEM2.out.idxstats.collect{it[1]}.ifEmpty([]))
-    
-    SAMTOOLS_DEPTH ( 
+
+    SAMTOOLS_DEPTH (
         FASTQ_ALIGN_BWAMEM2.out.bam,
         [[:],[]]
     )
     ch_versions      = ch_versions.mix(SAMTOOLS_DEPTH.out.versions)
 
-    PLOTBEDCOVERAGE ( 
-        SAMTOOLS_DEPTH.out.tsv 
+    PLOTBEDCOVERAGE (
+        SAMTOOLS_DEPTH.out.tsv
     )
     ch_versions     = ch_versions.mix(PLOTBEDCOVERAGE.out.versions)
+
+    // combine all the stats into A single file
+        SAMTOOLSSTATSEXTRACT (
+            FASTQ_ALIGN_BWAMEM2.out.stats
+        )
+        ch_versions      = ch_versions.mix(SAMTOOLSSTATSEXTRACT.out.versions)
+        stats_combined   = SAMTOOLSSTATSEXTRACT.out.tsv
+            .collect{it[1]}
+            .map{it -> [[id: 'stats_combined'], it]}
+
+        CAT_CAT (
+            stats_combined
+        )
+        ch_versions      = ch_versions.mix(CAT_CAT.out.versions)
+
+    PLOTSAMTOOLSSTATS (
+        CAT_CAT.out.file_out
+    )
+    ch_versions     = ch_versions.mix(PLOTSAMTOOLSSTATS.out.versions)
+
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
