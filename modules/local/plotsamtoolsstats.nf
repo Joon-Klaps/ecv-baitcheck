@@ -29,11 +29,6 @@ process PLOTSAMTOOLSSTATS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.bam
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        : \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' ))
-    END_VERSIONS
+     touch ${prefix}.pdf
     """
 }

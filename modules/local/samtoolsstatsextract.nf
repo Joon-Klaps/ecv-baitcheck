@@ -25,7 +25,8 @@ process SAMTOOLSSTATSEXTRACT {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        grep: \$(echo \$(grep --version 2>&1) | head -n1 | sed 's/.*\\)//' ))
+        grep: BusyBox v1.32.1
+        sed: 4.0 (not GNU)
     END_VERSIONS
     """
 
@@ -37,7 +38,8 @@ process SAMTOOLSSTATSEXTRACT {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        grep: \$(echo \$(grep --version 2>&1) | head -n1 | sed 's/.*\\)//' ))
+       grep: BusyBox v1.32.1
+       sed: 4.0 (not GNU)
     END_VERSIONS
     """
 }
