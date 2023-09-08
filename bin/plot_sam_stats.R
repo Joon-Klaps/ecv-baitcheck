@@ -20,11 +20,16 @@ df_unique<-df%>%
 lineage_levels <-df_unique%>%arrange(lineage)%>%select(sample_id)%>%unlist()%>%as.character()%>%unique()
 df_unique$sample_id<-factor(df_unique$sample_id, levels=lineage_levels)
 
+# Get a color amount that is the same as the number of lineages
+n_lin<-length(unique(df$lineage))
+color <- grDevices::colors()[grep("gr(a|e)y", grDevices::colors(), invert = T)]
+set.seed(123458) # get same colors over and over again
+
 # plotting it
 ggplot(df_unique, aes(x=sample_id,y=stat_value,fill=as.factor(lineage)))+
     geom_bar(position = "dodge", stat = "identity")+
     facet_wrap(~stat_name,scales="free")+
-    scale_fill_brewer(name = "Lineage", palette="Set3")+
+    scale_fill_manual(name = "Lineage", values = sample(color, n_lin))+
     ggtitle(paste(title))+
     theme(plot.title = element_text(hjust = 0.5),
         axis.title.y=element_blank(),
