@@ -23,6 +23,7 @@ df_unique$sample_id<-factor(df_unique$sample_id, levels=lineage_levels)
 # Get a color amount that is the same as the number of lineages
 n_lin<-length(unique(df$lineage))
 color <- grDevices::colors()[grep("gr(a|e)y", grDevices::colors(), invert = T)]
+set.seed(123458) # get same colors over and over again
 
 # plotting it
 ggplot(df_unique, aes(x=sample_id,y=stat_value,fill=as.factor(lineage)))+
