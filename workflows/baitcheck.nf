@@ -42,14 +42,15 @@ include { FASTQ_ALIGN_BWAMEM2 } from '../subworkflows/local/fastq_align_bwamem2'
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { BWAMEM2_INDEX               } from '../modules/nf-core/bwamem2/index/main'
-include { SAMTOOLS_DEPTH              } from '../modules/nf-core/samtools/depth/main'
-include { PLOTBEDCOVERAGE             } from '../modules/local/plotbedcoverage'
-include { SAMTOOLSSTATSEXTRACT        } from '../modules/local/samtoolsstatsextract'
-include { CAT_CAT                     } from '../modules/nf-core/cat/cat/main'
-include { PLOTSAMTOOLSSTATS           } from '../modules/local/plotsamtoolsstats'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { BWAMEM2_INDEX                } from '../modules/nf-core/bwamem2/index/main'
+include { SAMTOOLS_DEPTH               } from '../modules/nf-core/samtools/depth/main'
+include { PLOTBEDCOVERAGE              } from '../modules/local/plotbedcoverage'
+include { SAMTOOLSSTATSEXTRACT         } from '../modules/local/samtoolsstatsextract'
+include { CAT_CAT as CAT_CAT_STATS     } from '../modules/nf-core/cat/cat/main'
+include { CAT_CAT as CAT_CAT_COVERAGE  } from '../modules/nf-core/cat/cat/main'
+include { PLOTSAMTOOLSSTATS            } from '../modules/local/plotsamtoolsstats'
+include { CUSTOM_DUMPSOFTWAREVERSIONS  } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { MULTIQC                      } from '../modules/nf-core/multiqc/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,12 +97,20 @@ workflow BAITCHECK {
     )
     ch_versions      = ch_versions.mix(SAMTOOLS_DEPTH.out.versions)
 
-    PLOTBEDCOVERAGE (
-        SAMTOOLS_DEPTH.out.tsv
-    )
-    ch_versions     = ch_versions.mix(PLOTBEDCOVERAGE.out.versions)
+    // combine all the coverage into a single file
+        coverage_combined = SAMTOOLS_DEPTH.out.tsv
+            .collect{it[1]}
+            .map{it -> [[id: 'coverage_combined'], it]}
 
-    // combine all the stats into A single file
+        CAT_CAT_COVERAGE ( coverage_combined )
+        ch_versions      = ch_versions.mix(CAT_CAT_COVERAGE.out.versions)
+
+        PLOTBEDCOVERAGE (
+            coverage_combined
+        )
+        ch_versions     = ch_versions.mix(PLOTBEDCOVERAGE.out.versions)
+
+    // combine all the stats into a single file ... wow deja vu
         SAMTOOLSSTATSEXTRACT (
             FASTQ_ALIGN_BWAMEM2.out.stats
         )
@@ -110,13 +119,13 @@ workflow BAITCHECK {
             .collect{it[1]}
             .map{it -> [[id: 'stats_combined'], it]}
 
-        CAT_CAT (
+        CAT_CAT_STATS (
             stats_combined
         )
         ch_versions      = ch_versions.mix(CAT_CAT.out.versions)
 
     PLOTSAMTOOLSSTATS (
-        CAT_CAT.out.file_out
+        CAT_CAT_STATS.out.file_out
     )
     ch_versions     = ch_versions.mix(PLOTSAMTOOLSSTATS.out.versions)
 
