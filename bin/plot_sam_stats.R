@@ -26,7 +26,7 @@ color <- grDevices::colors()[grep("gr(a|e)y", grDevices::colors(), invert = T)]
 set.seed(123458) # get same colors over and over again
 
 # plotting it
-ggplot(df_unique, aes(x=sample_id,y=stat_value,fill=as.factor(lineage)))+
+plot<-ggplot(df_unique, aes(x=sample_id,y=stat_value,fill=as.factor(lineage)))+
     geom_bar(position = "dodge", stat = "identity")+
     facet_wrap(~stat_name,scales="free")+
     scale_fill_manual(name = "Lineage", values = sample(color, n_lin))+
@@ -35,7 +35,7 @@ ggplot(df_unique, aes(x=sample_id,y=stat_value,fill=as.factor(lineage)))+
         axis.title.y=element_blank(),
         axis.title.x=element_blank(),
         axis.text.x=element_blank())
-ggsave(paste(title,"_sam_summary",".pdf",sep=""), width = 20, height = 17, units="cm")
+ggsave(plot,file = paste(title,"_sam_summary",".pdf",sep=""), width = 20, height = 17, units="cm")
 
 # Storing a summary table as well (can also be gotten from multiqc)
 df_wide=pivot_wider(df,names_from="stat_name",values_from="stat_value")

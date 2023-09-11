@@ -7,7 +7,7 @@ coverage=read.table(args[1], sep="\t", header=F)
 title= args[2]
 
 # renames the header
-coverage=rename(coverage,c("Chr"="V1", "locus"="V2", "depth"="V3"))
+coverage=rename(coverage,c("chr"="V1", "pos"="V2", "coverage"="V3"))
 
 # Calculate mean
 coverage <- coverage %>% group_by(chr) %>% mutate(mean = mean(coverage))

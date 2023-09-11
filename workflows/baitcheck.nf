@@ -106,7 +106,7 @@ workflow BAITCHECK {
         ch_versions      = ch_versions.mix(CAT_CAT_COVERAGE.out.versions)
 
         PLOTBEDCOVERAGE (
-            coverage_combined
+            CAT_CAT_COVERAGE.out.file_out
         )
         ch_versions     = ch_versions.mix(PLOTBEDCOVERAGE.out.versions)
 
@@ -122,7 +122,7 @@ workflow BAITCHECK {
         CAT_CAT_STATS (
             stats_combined
         )
-        ch_versions      = ch_versions.mix(CAT_CAT.out.versions)
+        ch_versions      = ch_versions.mix(CAT_CAT_STATS.out.versions)
 
     PLOTSAMTOOLSSTATS (
         CAT_CAT_STATS.out.file_out
