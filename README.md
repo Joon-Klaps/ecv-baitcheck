@@ -23,7 +23,7 @@
 Now, you can run the pipeline using:
 
 ```bash
-nextflow run ecv/baitcheck \
+nextflow run Joon-Klaps/ecv-baitcheck \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --baits path/to/baits.fasta \
