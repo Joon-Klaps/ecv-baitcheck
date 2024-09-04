@@ -12,33 +12,36 @@ coverage=rename(coverage,c("chr"="V1", "pos"="V2", "coverage"="V3"))
 # Calculate mean
 coverage <- coverage %>% group_by(chr) %>% mutate(mean = mean(coverage))
 
-# Plot historgrams
-p1<-ggplot(coverage,aes(x=coverage))+
-    geom_histogram(binwidth=1)+
-    geom_vline(aes(xintercept = mean, color ="red"))+
+# Plot histograms
+p1 <- ggplot(coverage, aes(x = coverage)) +
+    geom_histogram(binwidth = 1) +
+    geom_vline(aes(xintercept = mean, color = "Mean")) +
+    scale_color_manual(values = c("Mean" = "red")) +
     facet_wrap(~chr) +
     ggtitle("Coverage distribution")
 
-ggsave(p1, file= paste(title,".coverage_distribution.pdf",sep=""), width = 30, height = 30, units="cm")
+ggsave(p1, file = paste(title, ".coverage_distribution.pdf", sep = ""), width = 30, height = 30, units = "cm")
 
 # Plot coverage per position
-p2<-ggplot(coverage,aes(x=pos, y=coverage))+
-    geom_point()+
-    geom_hline(aes(yintercept = mean, color ="red"))+
+p2 <- ggplot(coverage, aes(x = pos, y = coverage)) +
+    geom_point() +
+    geom_hline(aes(yintercept = mean, color = "Mean")) +
+    scale_color_manual(values = c("Mean" = "red")) +
     facet_wrap(~chr, scales = "free_x") +
     ggtitle("Coverage per position")
-ggsave(p2, file= paste(title,".coverage_position.pdf",sep=""), width = 30, height = 30, units="cm")
+
+ggsave(p2, file = paste(title, ".coverage_position.pdf", sep = ""), width = 30, height = 30, units = "cm")
 
 # Plot boxplot of mean coverage
-cov_mean<-coverage%>%group_by(chr)%>%summarise(mean=mean(coverage))
-p3<-ggplot(cov_mean, aes(x="",y=mean)) +
-    geom_jitter(color=3)+
-    geom_boxplot()+
-    geom_hline(yintercept=1.5, color ="red")+
-    geom_label(y=1.5,label=1.5,color="red")
+cov_mean <- coverage %>% group_by(chr) %>% summarise(mean = mean(coverage))
+p3 <- ggplot(cov_mean, aes(x = "", y = mean)) +
+    geom_jitter(color = 3) +
+    geom_boxplot() +
+    geom_hline(aes(yintercept = 1.5, color = "Mean"), show.legend = TRUE) +
+    geom_label(y = 1.5, label = "1.5", color = "red") +
+    scale_color_manual(values = c("Mean" = "red"))
 
-ggsave(p3, file= paste(title,".mean_coverage.pdf",sep=""),,device="pdf",width=5,height=7)
-
+ggsave(p3, file = paste(title, ".mean_coverage.pdf", sep = ""), device = "pdf", width = 5, height = 7)
 ### LOG files
 sink(paste(title, "R_session.log", sep = '.'))
 print(sessionInfo())
