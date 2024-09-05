@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
-library("tidyverse")
+library("dplyr")
+library("ggrepel")
 args = commandArgs(trailingOnly=TRUE)
 
 coverage=read.table(args[1], sep="\t", header=F)
@@ -34,12 +35,38 @@ ggsave(p2, file = paste(title, ".coverage_position.pdf", sep = ""), width = 30, 
 
 # Plot boxplot of mean coverage
 cov_mean <- coverage %>% group_by(chr) %>% summarise(mean = mean(coverage))
-p3 <- ggplot(cov_mean, aes(x = "", y = mean)) +
-    geom_jitter(color = 3) +
-    geom_boxplot() +
-    geom_hline(aes(yintercept = 1.5, color = "Mean"), show.legend = TRUE) +
-    geom_label(y = 1.5, label = "1.5", color = "red") +
-    scale_color_manual(values = c("Mean" = "red"))
+plot_data <- cov_mean %>%
+    mutate(
+      x = jitter(rep(1, n()), amount = 0.3),  # Create jittered x positions
+      below_threshold = mean < 1.5
+    )
+
+  p3 <- ggplot(plot_data, aes(x = x, y = mean)) +
+    geom_point(aes(color = below_threshold)) +
+    geom_boxplot(aes(x = 1), width = 0.5, alpha = 0.5, outlier.shape = NA) +
+    geom_hline(aes(yintercept = 1.5, linetype = "Threshold"), color = "red") +
+    geom_text_repel(
+      data = subset(plot_data, below_threshold),
+      aes(label = paste(chr, round(mean,2), sep=": ")),
+      size = 3,
+      box.padding = 0.5,
+      point.padding = 0.5,
+      force = 2
+    ) +
+    scale_color_manual(
+      values = c("TRUE" = "red", "FALSE" = "blue"),
+      labels = c("TRUE" = "Below Threshold", "FALSE" = "Above Threshold"),
+      name = "Coverage Status"
+    ) +
+    scale_linetype_manual(values = c("Threshold" = "dashed")) +
+    scale_x_continuous(breaks = 1, labels = "") +  # Remove x-axis label
+    labs(
+      title = "Mean Coverage Boxplot",
+      y = "Mean Coverage",
+      linetype = ""
+    ) +
+    theme_minimal() +
+    theme(legend.position = "bottom")
 
 ggsave(p3, file = paste(title, ".mean_coverage.pdf", sep = ""), device = "pdf", width = 5, height = 7)
 ### LOG files
@@ -49,10 +76,12 @@ sink()
 
 ### VERSIONS
 r.version <- strsplit(version[['version.string']], ' ')[[1]][3]
-tidyverse.version <- as.character(packageVersion('tidyverse'))
+dplyr.version <- as.character(packageVersion('dplyr'))
+ggrepel.version <- as.character(packageVersion('ggrepel'))
 
 sink("versions.yml")
 cat('PLOTBEDCOVERAGE:',"\n")
 cat(paste('    r-base:',r.version),"\n")
-cat(paste('    tidyverse:', tidyverse.version ),"\n")
+cat(paste('    dplyr:', dplyr.version ),"\n")
+cat(paste('    ggrepel:', ggrepel.version ),"\n")
 sink()
