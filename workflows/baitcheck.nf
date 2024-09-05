@@ -44,6 +44,9 @@ include { FASTQ_ALIGN_BWAMEM2 } from '../subworkflows/local/fastq_align_bwamem2'
 //
 include { BWAMEM2_INDEX                } from '../modules/nf-core/bwamem2/index/main'
 include { SAMTOOLS_DEPTH               } from '../modules/nf-core/samtools/depth/main'
+include { KAIJU_KAIJU                  } from '../modules/nf-core/kaiju/kaiju/main'
+include { KAIJU_KAIJU2TABLE            } from '../modules/nf-core/kaiju/kaiju2table/main'
+include { UNTAR                        } from '../modules/nf-core/untar/main'
 include { PLOTBEDCOVERAGE              } from '../modules/local/plotbedcoverage'
 include { SAMTOOLSSTATSEXTRACT         } from '../modules/local/samtoolsstatsextract'
 include { CAT_CAT as CAT_CAT_STATS     } from '../modules/nf-core/cat/cat/main'
@@ -72,12 +75,34 @@ workflow BAITCHECK {
     //Building the references
     ch_index = BWAMEM2_INDEX(ch_samplesheet).index
 
+    if (params.kaiju_db.endsWith('.tgz')) {
+
+        // Downloading the kaiju database
+        UNTAR (
+            Channel.of([[id:"kaiju"], file(params.kaiju_db, checkIfExists: true) ])
+        )
+        ch_versions      = ch_versions.mix(UNTAR.out.versions)
+        kaiju_db = UNTAR.out.untar.map{meta, path -> path}.collect()
+    } else {
+        kaiju_db = Channel.fromPath(params.kaiju_db, checkIfExists: true)
+    }
+
+    baits_meta = baits.map{baits -> [[ id: 'baits' ], baits ]}
+    // Check annotation of baits
+    KAIJU_KAIJU( baits_meta, kaiju_db)
+    ch_versions      = ch_versions.mix(KAIJU_KAIJU.out.versions)
+
+    KAIJU_KAIJU2TABLE( KAIJU_KAIJU.out.results, kaiju_db, params.kaiju_rank)
+    ch_versions      = ch_versions.mix(KAIJU_KAIJU2TABLE.out.versions)
+    ch_multiqc_files = ch_multiqc_files.mix(KAIJU_KAIJU2TABLE.out.summary.collect{it[1]}.ifEmpty([]))
+
     // some swapping of annotation data
     ch_index_baits = ch_index.combine(baits).join(ch_samplesheet,by:[0])
 
     ch_baits = ch_index_baits.map{ meta, index, baits, fasta -> [ meta, baits ] }
     ch_index = ch_index_baits.map{ meta, index, baits, fasta -> [ meta, index ] }
     ch_ref   = ch_index_baits.map{ meta, index, baits, fasta -> [ meta, fasta ] }
+
 
     // Aligning the reads
     FASTQ_ALIGN_BWAMEM2 (
