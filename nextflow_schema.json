@@ -34,6 +34,12 @@
                     "fa_icon": "fas fa-align-center",
                     "description": "The location of the designed baits"
                 },
+                "kaiju_db": {
+                    "type": "string",
+                    "default": "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_rvdb_2023-05-26.tgz",
+                    "fa_icon": "fas fa-database",
+                    "description": "Reference database of Kaiju"
+                },
                 "email": {
                     "type": "string",
                     "description": "Email address for completion summary.",
